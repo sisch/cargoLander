@@ -13,11 +13,10 @@ import time
 
 startTime = time.time()
 SCOREINTERVAL = 5
-class Game(object):
-    """class: Game
 
-    contains the main game loop and highscores
-    """
+
+class Game(object):
+    """Create Game object to host main loop and highscores"""
 
     def __init__(self, x, y):
         self.landerList = list()
@@ -31,10 +30,11 @@ class Game(object):
         self.seconds = 0
 
     def run(self):
+        """Initialise and run game loop"""
         global startTime
         self.RUNNING = True
         clock = pygame.time.Clock()
-        pygame.display.set_caption('Basic Pygame program')
+        pygame.display.set_caption('Cargo Lander v1.0')
         pygame.mouse.set_visible(True)
         self.initPlatforms()
         cursor = self.cursor_crosshair()
@@ -51,13 +51,18 @@ class Game(object):
             pygame.display.flip()
 
     def updateLanders(self, screen, deltaTime):
-        """def: updateLanders
+        """Analyse list of lander objects
 
-        Curates list of landers (removing deleted ones) and calls position update functions.
+         Loop through all landers known to the game and do:
+            * call x.update() on landers if x.isAlive == True
+            * calculate score on landers if x.hasScored == True
         """
         newScore = 0
+        newCount = 0
+        self.spawnLander()
         for lander in self.landerList:
             if lander.isAlive:
+                newCount += 1
                 lander.update(deltaTime, screen, self.landingLog, self.landerList + self.platformList)
             if lander.hasScored:
                 if lander.color == lander.collisionPartner.color:
@@ -65,22 +70,27 @@ class Game(object):
                 else:
                     newScore += 1
         self.score = newScore
+        self.landerCount = newCount
+
 
     def drawPlatforms(self, surface):
+        """Draw static landing platforms"""
         for platform in self.platformList:
             platform.drawPlatform(surface)
 
     def processInput(self):
-        """processInput handles key and mouse actions
+        """Handle event input (key and mouse)
 
-        Keydown and keyup events are distinguished for keyboard as well as mouse input.
-        Space spawns a new lander per click.
-        Clicking on a lander calls the clicked routine to check collision and thrusts the lander that is clicked
-
+        Space spawns a new lander per press.
+        Escape quits the game
+        Keydown events trigger thrust for either up or left/right
+        Keyup events trigger unthrust for either up or left/right
+        Click events call lander.clicked to check collision and trigger thrust on a single lander while clicked
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                  self.RUNNING = False
+            # KEYDOWN and KEYUP are handled seperately to allow press and hold actions
             if event.type == pygame.KEYDOWN:
                 if event.key == K_ESCAPE:
                     self.RUNNING = False
@@ -88,14 +98,14 @@ class Game(object):
                     for l in self.landerList:
                         l.thrust()
                 if event.key == K_SPACE:
-                    self.spawnLander()
+                    self.spawnLander(forced=True)
                 if event.key == K_LEFT:
                     for l in self.landerList:
                         l.horizontalThrust("LEFT")
                 if event.key == K_RIGHT:
                     for l in self.landerList:
                         l.horizontalThrust("RIGHT")
-
+            # KEYDOWN and KEYUP are handled seperately to allow press and hold actions
             if event.type == pygame.KEYUP:
                 if event.key == K_UP:
                     for l in self.landerList:
@@ -104,14 +114,6 @@ class Game(object):
                     for l in self.landerList:
                         l.horizontalUnthrust()
 
-            #keys = pygame.key.get_pressed()
-            #if keys[pygame.K_RIGHT]:
-            #    for l in self.landerList:
-            #        l.horizontalSpeed += 5
-            #if keys[pygame.K_LEFT]:
-            #    for l in self.landerList:
-            #        l.horizontalSpeed -= 5
-
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for l in self.landerList:
                     l.clicked(event.pos)
@@ -119,12 +121,18 @@ class Game(object):
                 for l in self.landerList:
                     l.unthrust()
 
-    def spawnLander(self):
-        myLander = Lander.Lander()
-        self.landerList.append(myLander)
-        self.landerCount += 1
+    def spawnLander(self, forced=False):
+        """Create and add a Lander object to landerList
+
+            * Whenever there is no lander left on screen
+            * Or there is forced spawning (e.g. space bar hit)
+        """
+        if self.landerCount == 0 or forced:
+            myLander = Lander.Lander()
+            self.landerList.append(myLander)
 
     def initPlatforms(self):
+        """Create and add platforms to platformList"""
         myPlatform = Platform.Platform((255, 0, 0), 10)
         self.platformList.append(myPlatform)
         myPlatform = Platform.Platform((255, 255, 0), 115)
@@ -134,6 +142,7 @@ class Game(object):
 
 
     def cursor_crosshair(self):
+        """Return compiled ASCII art mouse cursor"""
         strings = (
             "          XXXX          ",
             "          X..X          ",
@@ -163,6 +172,9 @@ class Game(object):
         return pygame.cursors.compile(strings, black='.',white='X',xor='o')
 
     def showScore(self, deltaTime, screen):
+        """Display current score in upper-right corner.
+
+        'No one will ever need more than 3-digits for a scoreboard' - Simon Schliesky March 5th 2014"""
         # Create a font
         font = pygame.font.Font(None, 17)
         text = font.render('%03d' % self.score, True, (255,
