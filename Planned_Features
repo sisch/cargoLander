@@ -1,9 +1,10 @@
-Platform collision only working on red not on yellow or blue
+Scoring -> Highscore Table
+Collision check at spawn (to prevent crashes during spawn)
+Graphics
+Manual
+Documentation
+Auto-Spawn if no Lander alive
+Game-Over mechanic
 
-Scoring
-
-Collision bei Spawn
-
-[Optional]
-Grid
-Collision in Gridfeld und Nachbarn
+[optional]
+Grid collision for performance
