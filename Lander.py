@@ -21,6 +21,7 @@ class Lander(object):
         self.isAlive = True
         self.type = "LANDER"
         self.hasScored = False
+        self.crashed = False
         self.collisionPartner = None
         self.boundingBox = {"x1": 0, "x2": 0, "y1": 0, "y2": 0}
         self._horizontalThrustLeftOn = False
@@ -100,7 +101,6 @@ class Lander(object):
         self.thrust()
 
     def update(self, deltaTime, screen, log, objectList):
-        crashed = False
         self.updateFallspeed(deltaTime)
         self.updateCoordinates(deltaTime)
         self.boundingBox = {"x1": self.xPos, "y1": self.yPos, "x2": (self.drawSize[0] + self.xPos), "y2": (self.drawSize[1] + self.yPos)}
@@ -111,9 +111,8 @@ class Lander(object):
                 if result == "LANDED":
                     self.hasScored = True
                 if result == "CRASHED":
-                    crashed = True
+                    self.crashed = True
         self.drawLander(screen)
-
 
 if __name__ == "__main__":
     DEBUGLEVEL = 2

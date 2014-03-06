@@ -1,10 +1,11 @@
 Scoring -> Highscore Table
 Collision check at spawn (to prevent crashes during spawn)
-Graphics
 Manual
 Documentation
 Auto-Spawn if no Lander alive
-Game-Over mechanic
+Speed-Control / greenlight redlight
+Fuel + Fuel bar
+Graphics
 
 [optional]
 Grid collision for performance
