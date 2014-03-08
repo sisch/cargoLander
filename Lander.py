@@ -9,44 +9,62 @@ CRASHSPEED = 40.0
 
 
 class Lander(object):
-    def __init__(self):
+    def __init__(self, parent, landerList, platformList, thrustPower=25.0):
+        self.parent = parent
         self.fallSpeed = 0
-        self.thrustPower = 25.0
-        self.yPos = 0
-        self.color = ((255, 0, 0), (0, 0, 255), (255, 255, 0))[random.randint(0, 2)]
-        self._isThrustOn = False
-        self.xPos = random.randrange(10, 280)
+        self.thrustPower = thrustPower
+        self.yPos = None
+        self.xPos = None
+        self.color = None
+        self.isThrustOn = False
         self.horizontalSpeed = 0.0
         self.drawSize = (40, 40)
         self.isAlive = True
         self.type = "LANDER"
         self.hasScored = False
-        self.crashed = False
+        self.hasCrashed = False
         self.collisionPartner = None
         self.boundingBox = {"x1": 0, "x2": 0, "y1": 0, "y2": 0}
-        self._horizontalThrustLeftOn = False
-        self._horizontalThrustRightOn = False
+        self.horizontalThrustLeftOn = False
+        self.horizontalThrustRightOn = False
+        self.landerList = landerList
+        self.platformList = platformList
+        # call spawn to set position and color with collision check before spawning lander
+        self.spawn(0)
+
+    def spawn(self,tries):
+        if tries > 5:
+            self.isAlive = False
+        else:
+            self.yPos = 0
+            self.color = ((255, 0, 0), (0, 0, 255), (255, 255, 0))[random.randint(0, 2)]
+            self.xPos = random.randrange(10, 280)
+            self.calcBoundingBox()
+            for lander in self.landerList:
+                if self.checkCollision(lander) != "CLEAR":
+                    self.spawn(tries+1)
+
 
     def thrust(self):
-        self._isThrustOn = True
+        self.isThrustOn = True
 
     def unthrust(self):
-        self._isThrustOn = False
+        self.isThrustOn = False
 
     def horizontalThrust(self, direction):
-        self._horizontalThrustLeftOn = direction == "LEFT"
-        self._horizontalThrustRightOn = direction == "RIGHT"
+        self.horizontalThrustLeftOn = direction == "LEFT"
+        self.horizontalThrustRightOn = direction == "RIGHT"
 
     def horizontalUnthrust(self):
-        self._horizontalThrustLeftOn = False
-        self._horizontalThrustRightOn = False
+        self.horizontalThrustLeftOn = False
+        self.horizontalThrustRightOn = False
 
     def updateFallspeed(self, deltaTime):
         global GRAVITY
-        self.fallSpeed += ((GRAVITY - (self.thrustPower * self._isThrustOn)) * deltaTime)
+        self.fallSpeed += ((GRAVITY - (self.thrustPower * self.isThrustOn)) * deltaTime)
         if self.yPos <= 0.5:
             self.fallSpeed = max(0, self.fallSpeed)
-        self.horizontalSpeed += ((self.thrustPower * -self._horizontalThrustLeftOn) + (self.thrustPower * self._horizontalThrustRightOn)) * deltaTime
+        self.horizontalSpeed += ((self.thrustPower * -self.horizontalThrustLeftOn) + (self.thrustPower * self.horizontalThrustRightOn)) * deltaTime
         self.horizontalSpeed -= (0.5 * self.horizontalSpeed) * deltaTime
 
     def updateCoordinates(self, deltaTime):
@@ -58,7 +76,7 @@ class Lander(object):
     def checkCollision(self, object):
         if object == self or not object.isAlive:
             return "CLEAR"
-        if self.yPos > 460: # replace with screen size height
+        if self.yPos > self.parent.drawSize[1]: # replace with screen size height
             self.collisionPartner = "EDGE"
             return "CRASHED"
         # in Java
@@ -85,13 +103,18 @@ class Lander(object):
         print("fallspeed:\t%.2f" % self.fallSpeed)
         print("thrustpower:\t%.2f" % self.thrustPower)
         print("color:\t%s" % str(self.color))
-        print("isThrustOn:\t%d" % self._isThrustOn)
+        print("isThrustOn:\t%d" % self.isThrustOn)
         print("y-Position:\t%.2f" % self.yPos)
         print("x-Position:\t%.2f" % self.xPos)
 
     def drawLander(self, screen):
         if self.isAlive:
+            global CRASHSPEED
+            fallSpeedLight = ((255, 50, 50) if self.fallSpeed >= CRASHSPEED else (50, 255, 50))
             pygame.draw.rect(screen, self.color, ((self.xPos, self.yPos), self.drawSize), 0)
+            pygame.draw.rect(screen, (0, 0, 0), ((self.xPos + self.drawSize[0] - 3, self.yPos + self.drawSize[1] - 3), (3, 3)), 0)
+            pygame.draw.rect(screen, fallSpeedLight, ((self.xPos + self.drawSize[0] - 2, self.yPos + self.drawSize[1] - 2), (2, 2)), 0)
+
 
     def clicked(self, mousePosition):
         if mousePosition[0] < self.xPos or mousePosition[0] > (self.xPos + self.drawSize[0]):
@@ -100,10 +123,14 @@ class Lander(object):
             return None
         self.thrust()
 
-    def update(self, deltaTime, screen, log, objectList):
+    def calcBoundingBox(self):
+        self.boundingBox = {"x1": self.xPos, "y1": self.yPos, "x2": (self.drawSize[0] + self.xPos), "y2": (self.drawSize[1] + self.yPos)}
+
+    def update(self, deltaTime, screen, log):
         self.updateFallspeed(deltaTime)
         self.updateCoordinates(deltaTime)
-        self.boundingBox = {"x1": self.xPos, "y1": self.yPos, "x2": (self.drawSize[0] + self.xPos), "y2": (self.drawSize[1] + self.yPos)}
+        self.calcBoundingBox()
+        objectList = (self.landerList + self.platformList)
         for object in objectList:
             result = self.checkCollision(object)
             if result != "CLEAR":
@@ -111,7 +138,7 @@ class Lander(object):
                 if result == "LANDED":
                     self.hasScored = True
                 if result == "CRASHED":
-                    self.crashed = True
+                    self.hasCrashed = True
         self.drawLander(screen)
 
 if __name__ == "__main__":

@@ -33,7 +33,7 @@ class Game(object):
     def run(self):
         """Initialise and run game loop"""
         clock = pygame.time.Clock()
-        pygame.display.set_caption('Cargo Lander v0.1')
+        pygame.display.set_caption('Cargo Lander v0.2')
         pygame.mouse.set_visible(True)
         cursor = self.cursor_crosshair()
         pygame.mouse.set_cursor((24, 24), (12, 12), *cursor)
@@ -71,13 +71,13 @@ class Game(object):
         for lander in self.landerList:
             if lander.isAlive:
                 newCount += 1
-                lander.update(deltaTime, screen, self.landingLog, self.landerList + self.platformList)
+                lander.update(deltaTime, screen, self.landingLog)
             elif lander.hasScored:
                 if lander.color == lander.collisionPartner.color:
                     newScore += 3
                 else:
                     newScore += 1
-            else:
+            elif lander.hasCrashed:
                 noCrashed += 1
         self.score = newScore
         self.crashed = noCrashed
@@ -137,10 +137,10 @@ class Game(object):
         """Create and add a Lander object to landerList
 
             * Whenever there is no lander left on screen
-            * Or there is forced spawning (e.g. space bar hit)
+            * Or when there is forced spawning (e.g. space bar hit)
         """
         if self.landerCount == 0 or forced:
-            myLander = Lander.Lander()
+            myLander = Lander.Lander(self, self.landerList, self.platformList)
             self.landerList.append(myLander)
 
     def initPlatforms(self):

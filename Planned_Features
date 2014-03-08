@@ -1,11 +1,10 @@
 Scoring -> Highscore Table
-Collision check at spawn (to prevent crashes during spawn)
 Manual
 Documentation
-Auto-Spawn if no Lander alive
 Speed-Control / greenlight redlight
 Fuel + Fuel bar
 Graphics
+Game Time (e.g. 90 seconds)
 
 [optional]
 Grid collision for performance
