@@ -7,6 +7,7 @@ The goal is to safely land color-coded drones on the corresponding platform/door
 
 import Lander
 import Platform
+import Assets
 import pygame
 from pygame.locals import *
 import time
@@ -29,11 +30,12 @@ class Game(object):
         self.landingLog = list()
         self.seconds = 0
         self.topBar = None
+        self.assets = Assets.Assets()
 
     def run(self):
         """Initialise and run game loop"""
         clock = pygame.time.Clock()
-        pygame.display.set_caption('Cargo Lander v0.2')
+        pygame.display.set_caption('Cargo Lander v0.3')
         pygame.mouse.set_visible(True)
         cursor = self.cursor_crosshair()
         pygame.mouse.set_cursor((24, 24), (12, 12), *cursor)
@@ -71,7 +73,7 @@ class Game(object):
         for lander in self.landerList:
             if lander.isAlive:
                 newCount += 1
-                lander.update(deltaTime, screen, self.landingLog)
+                lander.update(deltaTime, screen, self.assets, self.landingLog)
             elif lander.hasScored:
                 if lander.color == lander.collisionPartner.color:
                     newScore += 3

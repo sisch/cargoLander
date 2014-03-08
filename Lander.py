@@ -107,14 +107,22 @@ class Lander(object):
         print("y-Position:\t%.2f" % self.yPos)
         print("x-Position:\t%.2f" % self.xPos)
 
-    def drawLander(self, screen):
+    def drawLander(self, screen, assets):
         if self.isAlive:
             global CRASHSPEED
-            fallSpeedLight = ((255, 50, 50) if self.fallSpeed >= CRASHSPEED else (50, 255, 50))
-            pygame.draw.rect(screen, self.color, ((self.xPos, self.yPos), self.drawSize), 0)
-            pygame.draw.rect(screen, (0, 0, 0), ((self.xPos + self.drawSize[0] - 3, self.yPos + self.drawSize[1] - 3), (3, 3)), 0)
-            pygame.draw.rect(screen, fallSpeedLight, ((self.xPos + self.drawSize[0] - 2, self.yPos + self.drawSize[1] - 2), (2, 2)), 0)
-
+            fallSpeedLight = (assets.landerLightRed if self.fallSpeed >= CRASHSPEED else assets.landerLightGreen)
+            box = None
+            if self.color == (255, 0, 0):
+                box = assets.redBox
+            elif self.color == (255, 255, 0):
+                box = assets.yellowBox
+            elif self.color == (0, 0, 255):
+                box = assets.blueBox
+            screen.blit(box, (self.xPos, self.yPos))
+            screen.blit(assets.boxOverlay, (self.xPos, self.yPos))
+            screen.blit(assets.landerBody, (self.xPos, self.yPos))
+            screen.blit(assets.rotorA, (self.xPos, self.yPos))
+            screen.blit(fallSpeedLight, (self.xPos, self.yPos))
 
     def clicked(self, mousePosition):
         if mousePosition[0] < self.xPos or mousePosition[0] > (self.xPos + self.drawSize[0]):
@@ -126,7 +134,7 @@ class Lander(object):
     def calcBoundingBox(self):
         self.boundingBox = {"x1": self.xPos, "y1": self.yPos, "x2": (self.drawSize[0] + self.xPos), "y2": (self.drawSize[1] + self.yPos)}
 
-    def update(self, deltaTime, screen, log):
+    def update(self, deltaTime, screen, assets, log):
         self.updateFallspeed(deltaTime)
         self.updateCoordinates(deltaTime)
         self.calcBoundingBox()
@@ -139,7 +147,7 @@ class Lander(object):
                     self.hasScored = True
                 if result == "CRASHED":
                     self.hasCrashed = True
-        self.drawLander(screen)
+        self.drawLander(screen, assets)
 
 if __name__ == "__main__":
     DEBUGLEVEL = 2
