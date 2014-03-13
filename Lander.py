@@ -29,6 +29,7 @@ class Lander(object):
         self.horizontalThrustRightOn = False
         self.landerList = landerList
         self.platformList = platformList
+        self.fuelLeft = 10
         # call spawn to set position and color with collision check before spawning lander
         self.spawn(0)
 
@@ -46,7 +47,9 @@ class Lander(object):
 
 
     def thrust(self):
-        self.isThrustOn = True
+        if self.fuelLeft > 0:
+            self.isThrustOn = True
+
 
     def unthrust(self):
         self.isThrustOn = False
@@ -134,10 +137,17 @@ class Lander(object):
     def calcBoundingBox(self):
         self.boundingBox = {"x1": self.xPos, "y1": self.yPos, "x2": (self.drawSize[0] + self.xPos), "y2": (self.drawSize[1] + self.yPos)}
 
+    def useFuel(self, deltaTime):
+        if self.isThrustOn:
+            self.fuelLeft -= deltaTime
+        if self.fuelLeft <= 0:
+            self.unthrust()
+
     def update(self, deltaTime, screen, assets, log):
         self.updateFallspeed(deltaTime)
         self.updateCoordinates(deltaTime)
         self.calcBoundingBox()
+        self.useFuel(deltaTime)
         objectList = (self.landerList + self.platformList)
         for object in objectList:
             result = self.checkCollision(object)
