@@ -1,8 +1,6 @@
 __author__ = 'Simon'
 
 import random
-import pygame
-from pygame.locals import *
 
 GRAVITY = 15  # 9.98 # Earth value
 CRASHSPEED = 40.0

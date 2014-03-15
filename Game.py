@@ -8,9 +8,9 @@ The goal is to safely land color-coded drones on the corresponding platform/door
 import Lander
 import Platform
 import Assets
+import Highscore
 import pygame
 from pygame.locals import *
-import time
 
 
 class Game(object):
@@ -31,6 +31,9 @@ class Game(object):
         self.seconds = 0
         self.topBar = None
         self.assets = Assets.Assets()
+        self.playerName = "Bla"
+        self.highscore = Highscore.Highscore("highscores.xml")
+        self.scored = False
 
     def run(self):
         """Initialise and run game loop"""
@@ -41,7 +44,7 @@ class Game(object):
         pygame.mouse.set_cursor((24, 24), (12, 12), *cursor)
         self.initPlatforms()
         self.drawTopBar()
-        gameArea = pygame.Surface((self.drawSize[0],self.drawSize[1] - 20))
+        gameArea = pygame.Surface((self.drawSize[0], self.drawSize[1] - 20))
         while True:  # self.GAMESTATE == "RUNNING":
             deltaTime = clock.tick(60) / 1000.0
             self.processInput()
@@ -220,6 +223,10 @@ class Game(object):
         screen.blit(shade, (0, 0))
         screen.blit(text, textRect)
         # Score
+        if not self.scored:
+            self.highscore.insertScore(name=self.playerName, score=self.score)
+            self.highscore.writeHighscores()
+            self.scored = True
         font = pygame.font.Font(None, 20)
         text = font.render('%03d' % self.score, True, (255, 255, 255, 0))
         textRect = text.get_rect()
