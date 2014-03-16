@@ -28,7 +28,7 @@ class Game(object):
         pygame.init()
         self.screen = pygame.display.set_mode(self.drawSize)
         self.landingLog = list()
-        self.seconds = 0
+        self.secondsLeft = 90
         self.topBar = None
         self.assets = Assets.Assets()
         self.playerName = "Bla"
@@ -38,7 +38,7 @@ class Game(object):
     def run(self):
         """Initialise and run game loop"""
         clock = pygame.time.Clock()
-        pygame.display.set_caption('Cargo Lander v0.3')
+        pygame.display.set_caption('Cargo Lander v0.4')
         pygame.mouse.set_visible(True)
         cursor = self.cursor_crosshair()
         pygame.mouse.set_cursor((24, 24), (12, 12), *cursor)
@@ -50,11 +50,14 @@ class Game(object):
             self.processInput()
             gameArea.fill((50, 50, 150))
             self.drawPlatforms(gameArea)
+            self.updateTimeLeft(deltaTime)
             self.drawTopBar()
             if self.GAMESTATE == "RUNNING":
                 self.updateLanders(gameArea, deltaTime)
             if self.GAMESTATE == "GAMEOVER":
-                self.gameOverScreen(gameArea)
+                self.gameOverScreen(gameArea, "GAME OVER")
+            if self.GAMESTATE == "TIMEUP":
+                self.gameOverScreen(gameArea, "TIME IS UP")
             self.screen.blit(gameArea, (0, 20))
             self.screen.blit(self.topBar, (0, 0))
             pygame.display.flip()
@@ -109,7 +112,7 @@ class Game(object):
             if event.type == pygame.KEYDOWN:
                 if event.key == K_ESCAPE:
                     self.GAMESTATE = "QUIT"
-                if event.key == K_r and self.GAMESTATE == "GAMEOVER":
+                if event.key == K_r and (self.GAMESTATE == "GAMEOVER" or self.GAMESTATE == "TIMEUP"):
                     self.restart()
                 if event.key == K_UP:
                     for l in self.landerList:
@@ -200,9 +203,22 @@ class Game(object):
         textRect.y = 2
         screen.blit(text, textRect)
 
+    def showTime(self, screen):
+        """Display current score in upper-right corner.
+
+        'No one will ever need more than 3-digits for a scoreboard' - Simon Schliesky March 5th 2014"""
+        # Create a font
+        font = pygame.font.Font(None, 17)
+        text = font.render('%02d' % self.secondsLeft, True, (255,
+        255, 255), (0, 0, 0))
+        textRect = text.get_rect()
+        textRect.centerx = (self.drawSize[0] - textRect.width) / 2
+        textRect.y = 2
+        screen.blit(text, textRect)
+
     def showLives(self, screen):
         for x in range(0, self.lives - self.crashed):
-            icon = pygame.Surface((5,5))
+            icon = pygame.Surface((5, 5))
             icon.fill((255, 0, 0))
             screen.blit(icon, (5 + 10*x, 2))
 
@@ -210,20 +226,20 @@ class Game(object):
         if self.lives <= self.crashed and self.GAMESTATE != "QUIT":
             self.GAMESTATE = "GAMEOVER"
 
-    def gameOverScreen(self, screen):
+    def gameOverScreen(self, screen, text):
         shade = pygame.Surface(screen.get_size())
         shade.fill((50, 50, 50))
         shade.set_alpha(64)
         # GAMEOVER
         font = pygame.font.Font(None, 32)
-        text = font.render('GAME OVER', True, (255, 255, 255))
+        text = font.render(text, True, (255, 255, 255))
         textRect = text.get_rect()
         textRect.centerx = self.drawSize[0]/2
         textRect.centery = self.drawSize[1]/2 - 50
         screen.blit(shade, (0, 0))
         screen.blit(text, textRect)
         # Score
-        if not self.scored:
+        if not self.scored and self.score > 0:
             self.highscore.insertScore(name=self.playerName, score=self.score)
             self.highscore.writeHighscores()
             self.scored = True
@@ -241,6 +257,7 @@ class Game(object):
         self.score = 0
         self.lives = 4
         self.crashed = 0
+        self.secondsLeft = 90
         self.GAMESTATE = "RUNNING"
         self.initPlatforms()
 
@@ -249,7 +266,15 @@ class Game(object):
         topBar.fill((0, 0, 0))
         self.showScore(topBar)
         self.showLives(topBar)
+        self.showTime(topBar)
         self.topBar = topBar
+
+    def updateTimeLeft(self, deltatime):
+        if self.secondsLeft <= 0:
+            self.GAMESTATE = "TIMEUP"
+        else:
+            self.secondsLeft -= deltatime
+
 
 if __name__ == "__main__":
     myGame = Game(320, 480)
