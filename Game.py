@@ -38,16 +38,18 @@ class Game(object):
     def run(self):
         """Initialise and run game loop"""
         clock = pygame.time.Clock()
-        pygame.display.set_caption('Cargo Lander v0.4')
+        pygame.display.set_caption('Cargo Lander v0.5')
         pygame.mouse.set_visible(True)
         cursor = self.cursor_crosshair()
         pygame.mouse.set_cursor((24, 24), (12, 12), *cursor)
         self.initPlatforms()
         self.drawTopBar()
         gameArea = pygame.Surface((self.drawSize[0], self.drawSize[1] - 20))
-        while True:  # self.GAMESTATE == "RUNNING":
+        while True:
             deltaTime = clock.tick(60) / 1000.0
             self.processInput()
+            if self.GAMESTATE == "QUIT":
+                return
             gameArea.fill((50, 50, 150))
             self.drawPlatforms(gameArea)
             self.updateTimeLeft(deltaTime)
@@ -62,8 +64,7 @@ class Game(object):
             self.screen.blit(self.topBar, (0, 0))
             pygame.display.flip()
             self.checkGameOver()
-            if self.GAMESTATE == "QUIT":
-                return
+
 
     def updateLanders(self, screen, deltaTime):
         """Analyse list of lander objects
@@ -204,13 +205,10 @@ class Game(object):
         screen.blit(text, textRect)
 
     def showTime(self, screen):
-        """Display current score in upper-right corner.
-
-        'No one will ever need more than 3-digits for a scoreboard' - Simon Schliesky March 5th 2014"""
+        """Display current time in the center of topbar."""
         # Create a font
         font = pygame.font.Font(None, 17)
-        text = font.render('%02d' % self.secondsLeft, True, (255,
-        255, 255), (0, 0, 0))
+        text = font.render('%02d' % self.secondsLeft, True, (255, 255, 255), (0, 0, 0))
         textRect = text.get_rect()
         textRect.centerx = (self.drawSize[0] - textRect.width) / 2
         textRect.y = 2
@@ -277,5 +275,7 @@ class Game(object):
 
 
 if __name__ == "__main__":
-    myGame = Game(320, 480)
+    xdim = 320
+    ydim = 480
+    myGame = Game(xdim, ydim)
     myGame.run()

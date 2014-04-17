@@ -1,7 +1,7 @@
 __author__ = 'Simon'
 
 import random
-
+import pygame
 GRAVITY = 15  # 9.98 # Earth value
 CRASHSPEED = 40.0
 
@@ -31,7 +31,7 @@ class Lander(object):
         # call spawn to set position and color with collision check before spawning lander
         self.spawn(0)
 
-    def spawn(self,tries):
+    def spawn(self, tries):
         if tries > 5:
             self.isAlive = False
         else:
@@ -77,19 +77,14 @@ class Lander(object):
     def checkCollision(self, object):
         if object == self or not object.isAlive:
             return "CLEAR"
-        if self.yPos > self.parent.drawSize[1]: # replace with screen size height
+        if self.yPos > self.parent.drawSize[1]:  # replace with screen size height
             self.collisionPartner = "EDGE"
             return "CRASHED"
-        # in Java
-        # if(!(box1.x > box2.x + box2.width
-        # ||  box1.x + box1.width < box2.x
-        # ||  box1.y > box2.y + box2.height
-        # ||  box1.y + box1.height < box2.y))
         if not((object.yPos + object.drawSize[1]) < self.boundingBox["y1"]
                 or object.yPos > self.boundingBox["y2"]):
             if not((object.xPos + object.drawSize[0]) < self.boundingBox["x1"]
                     or object.xPos > self.boundingBox["x2"]):
-                if(object.type == "PLATFORM"):
+                if object.type == "PLATFORM":
                     global CRASHSPEED
                     self.collisionPartner = object
                     if self.fallSpeed <= CRASHSPEED:
@@ -124,6 +119,14 @@ class Lander(object):
             screen.blit(assets.landerBody, (self.xPos, self.yPos))
             screen.blit(assets.rotorA, (self.xPos, self.yPos))
             screen.blit(fallSpeedLight, (self.xPos, self.yPos))
+            fuelBarColor = (0, 255, 0)
+            relativeFuel = (self.fuelLeft / 10)
+            if relativeFuel < 0.9:
+                fuelBarColor = (255, 255, 0)
+            if relativeFuel < 0.4:
+                fuelBarColor = (255, 0, 0)
+            pygame.draw.rect(screen, (0, 0, 0), ((self.xPos, self.yPos), (4, 20)), 0)
+            pygame.draw.rect(screen, fuelBarColor, ((self.xPos+1, self.yPos), (2, 20 * relativeFuel)), 0)
 
     def clicked(self, mousePosition):
         if mousePosition[0] < self.xPos or mousePosition[0] > (self.xPos + self.drawSize[0]):
