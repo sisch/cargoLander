@@ -6,7 +6,7 @@ class Platform(object):
         self.color = color
         #alt. random color ((255, 0, 0), (0, 0, 255), (255, 255, 0))[random.randint(0, 2)]
         self.xPos = xPos
-        self.yPos = 440
+        self.yPos = 427
         self.drawSize = (90, 5)
         self.type = "PLATFORM"
         self.isAlive = True  # isAlive is added(never used) for compatibility with checkCollision of Lander class

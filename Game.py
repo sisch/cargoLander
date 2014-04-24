@@ -28,7 +28,7 @@ class Game(object):
         pygame.init()
         self.screen = pygame.display.set_mode(self.drawSize)
         self.landingLog = list()
-        self.secondsLeft = 90
+        self.secondsLeft = 3
         self.topBar = None
         self.assets = Assets.Assets()
         self.playerName = "Bla"
@@ -50,7 +50,7 @@ class Game(object):
             self.processInput()
             if self.GAMESTATE == "QUIT":
                 return
-            gameArea.fill((50, 50, 150))
+            gameArea.fill((50, 50, 150))  # Background
             self.drawPlatforms(gameArea)
             self.updateTimeLeft(deltaTime)
             self.drawTopBar()
@@ -236,6 +236,7 @@ class Game(object):
         textRect.centery = self.drawSize[1]/2 - 50
         screen.blit(shade, (0, 0))
         screen.blit(text, textRect)
+        self.highscore.drawHighscore(screen)
         # Score
         if not self.scored and self.score > 0:
             self.highscore.insertScore(name=self.playerName, score=self.score)
@@ -268,10 +269,11 @@ class Game(object):
         self.topBar = topBar
 
     def updateTimeLeft(self, deltatime):
-        if self.secondsLeft <= 0:
-            self.GAMESTATE = "TIMEUP"
-        else:
-            self.secondsLeft -= deltatime
+        if self.GAMESTATE != "GAMEOVER":
+            if self.secondsLeft <= 0:
+                self.GAMESTATE = "TIMEUP"
+            else:
+                self.secondsLeft -= deltatime
 
 
 if __name__ == "__main__":
