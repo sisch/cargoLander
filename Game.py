@@ -9,6 +9,7 @@ import Lander
 import Platform
 import Assets
 import Highscore
+import enums
 import pygame
 from pygame.locals import *
 
@@ -23,15 +24,15 @@ class Game(object):
         self.score = 0
         self.lives = 4
         self.crashed = 0
-        self.GAMESTATE = "RUNNING"
+        self.GAMESTATE = enums.GAMESTATE.STARTSCREEN
         self.drawSize = (x, y)
         pygame.init()
         self.screen = pygame.display.set_mode(self.drawSize)
         self.landingLog = list()
-        self.secondsLeft = 3
+        self.secondsLeft = 75
         self.topBar = None
         self.assets = Assets.Assets()
-        self.playerName = "Bla"
+        self.playerName = ""
         self.highscore = Highscore.Highscore("highscores.xml")
         self.scored = False
 
@@ -48,18 +49,20 @@ class Game(object):
         while True:
             deltaTime = clock.tick(60) / 1000.0
             self.processInput()
-            if self.GAMESTATE == "QUIT":
+            if self.GAMESTATE == enums.GAMESTATE.QUIT:
                 return
             gameArea.fill((50, 50, 150))  # Background
             self.drawPlatforms(gameArea)
             self.updateTimeLeft(deltaTime)
             self.drawTopBar()
-            if self.GAMESTATE == "RUNNING":
+            if self.GAMESTATE == enums.GAMESTATE.RUNNING:
                 self.updateLanders(gameArea, deltaTime)
-            if self.GAMESTATE == "GAMEOVER":
+            if self.GAMESTATE == enums.GAMESTATE.GAMEOVER:
                 self.gameOverScreen(gameArea, "GAME OVER")
-            if self.GAMESTATE == "TIMEUP":
+            if self.GAMESTATE == enums.GAMESTATE.TIMEUP:
                 self.gameOverScreen(gameArea, "TIME IS UP")
+            if self.GAMESTATE == enums.GAMESTATE.STARTSCREEN:
+                self.startScreen(gameArea)
             self.screen.blit(gameArea, (0, 20))
             self.screen.blit(self.topBar, (0, 0))
             pygame.display.flip()
@@ -70,8 +73,8 @@ class Game(object):
         """Analyse list of lander objects
 
          Loop through all landers known to the game and do:
-            * call x.update() on landers if x.isAlive == True
-            * calculate score on landers if x.hasScored == True
+            * call x.update() on landers if x.isAlive
+            * calculate score on landers if x.hasScored
         """
         newScore = 0
         newCount = 0
@@ -107,40 +110,55 @@ class Game(object):
         Click events call lander.clicked to check collision and trigger thrust on a single lander while clicked
         """
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                 self.GAMESTATE = "QUIT"
-            # KEYDOWN and KEYUP are handled separately to allow press and hold actions
-            if event.type == pygame.KEYDOWN:
-                if event.key == K_ESCAPE:
-                    self.GAMESTATE = "QUIT"
-                if event.key == K_r and (self.GAMESTATE == "GAMEOVER" or self.GAMESTATE == "TIMEUP"):
-                    self.restart()
-                if event.key == K_UP:
+            if self.GAMESTATE != enums.GAMESTATE.STARTSCREEN:
+                if event.type == pygame.QUIT:
+                    self.GAMESTATE = enums.GAMESTATE.QUIT
+                # KEYDOWN and KEYUP are handled separately to allow press and hold actions
+                if event.type == pygame.KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        self.GAMESTATE = enums.GAMESTATE.QUIT
+                    if event.key == K_r and (self.GAMESTATE == enums.GAMESTATE.GAMEOVER or self.GAMESTATE == enums.GAMESTATE.TIMEUP):
+                        self.restart()
+                    if event.key == K_UP:
+                        for l in self.landerList:
+                            l.thrust()
+                    if event.key == K_SPACE:
+                        self.spawnLander(forced=True)
+                    if event.key == K_LEFT:
+                        for l in self.landerList:
+                            l.horizontalThrust("LEFT")
+                    if event.key == K_RIGHT:
+                        for l in self.landerList:
+                            l.horizontalThrust("RIGHT")
+                # KEYDOWN and KEYUP are handled seperately to allow press and hold actions
+                if event.type == pygame.KEYUP:
+                    if event.key == K_UP:
+                        for l in self.landerList:
+                            l.unthrust()
+                    if event.key == K_LEFT or event.key == K_RIGHT:
+                        for l in self.landerList:
+                            l.horizontalUnthrust()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     for l in self.landerList:
-                        l.thrust()
-                if event.key == K_SPACE:
-                    self.spawnLander(forced=True)
-                if event.key == K_LEFT:
-                    for l in self.landerList:
-                        l.horizontalThrust("LEFT")
-                if event.key == K_RIGHT:
-                    for l in self.landerList:
-                        l.horizontalThrust("RIGHT")
-            # KEYDOWN and KEYUP are handled seperately to allow press and hold actions
-            if event.type == pygame.KEYUP:
-                if event.key == K_UP:
+                        l.clicked(event.pos)
+                if event.type == pygame.MOUSEBUTTONUP:
                     for l in self.landerList:
                         l.unthrust()
-                if event.key == K_LEFT or event.key == K_RIGHT:
-                    for l in self.landerList:
-                        l.horizontalUnthrust()
+            else:
+                pygame.key.set_repeat(500, 30)
+                pygame.key.set_mods(0)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == K_RETURN:
+                        self.GAMESTATE = enums.GAMESTATE.RUNNING
+                    elif event.key == K_ESCAPE:
+                        self.GAMESTATE = enums.GAMESTATE.QUIT
+                    elif event.key == K_BACKSPACE:
+                        self.playerName = self.playerName[:-1]
+                    elif event.key in range(97, 123):
+                        self.playerName += chr(event.key)
+                self.playerName = self.playerName.title()
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for l in self.landerList:
-                    l.clicked(event.pos)
-            if event.type == pygame.MOUSEBUTTONUP:
-                for l in self.landerList:
-                    l.unthrust()
 
     def spawnLander(self, forced=False):
         """Create and add a Lander object to landerList
@@ -221,8 +239,8 @@ class Game(object):
             screen.blit(icon, (5 + 10*x, 2))
 
     def checkGameOver(self):
-        if self.lives <= self.crashed and self.GAMESTATE != "QUIT":
-            self.GAMESTATE = "GAMEOVER"
+        if self.lives <= self.crashed and self.GAMESTATE != enums.GAMESTATE.QUIT:
+            self.GAMESTATE = enums.GAMESTATE.GAMEOVER
 
     def gameOverScreen(self, screen, text):
         shade = pygame.Surface(screen.get_size())
@@ -257,7 +275,7 @@ class Game(object):
         self.lives = 4
         self.crashed = 0
         self.secondsLeft = 90
-        self.GAMESTATE = "RUNNING"
+        self.GAMESTATE = enums.GAMESTATE.RUNNING
         self.initPlatforms()
 
     def drawTopBar(self):
@@ -269,11 +287,37 @@ class Game(object):
         self.topBar = topBar
 
     def updateTimeLeft(self, deltatime):
-        if self.GAMESTATE != "GAMEOVER":
+        if self.GAMESTATE == enums.GAMESTATE.RUNNING:
             if self.secondsLeft <= 0:
-                self.GAMESTATE = "TIMEUP"
+                self.GAMESTATE = enums.GAMESTATE.TIMEUP
             else:
                 self.secondsLeft -= deltatime
+
+    def startScreen(self, screen):
+        """Draw start screen and ask for name
+        """
+        font = pygame.font.Font(None, 20)
+        text = font.render(self.playerName, True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.centerx = self.drawSize[0]/2
+        textRect.centery = self.drawSize[1]/2 + 35
+        screen.blit(text, textRect)
+
+        text = font.render("Input name", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.centerx = self.drawSize[0]/2
+        textRect.centery = self.drawSize[1]/2 + 50
+        screen.blit(text, textRect)
+        text = font.render("Press Enter", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.centerx = self.drawSize[0]/2
+        textRect.centery = self.drawSize[1]/2 + 80
+        screen.blit(text, textRect)
+        text = font.render("to start Game", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.centerx = self.drawSize[0]/2
+        textRect.centery = self.drawSize[1]/2 + 96
+        screen.blit(text, textRect)
 
 
 if __name__ == "__main__":
