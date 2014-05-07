@@ -1,8 +1,11 @@
-Handle _blank_ name input
-
+[Todo]
+Handle _blank_ name input in a funny way ^^
 Manual
 Documentation
 Final Graphics (explosions)
 
 [optional]
 Grid collision for performance
+
+[known bugs]
+Mouse click acceleration does not work all the time

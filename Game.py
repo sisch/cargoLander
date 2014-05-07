@@ -39,7 +39,7 @@ class Game(object):
     def run(self):
         """Initialise and run game loop"""
         clock = pygame.time.Clock()
-        pygame.display.set_caption('Cargo Lander v1.0')
+        pygame.display.set_caption('Cargo Lander v0.9')
         pygame.mouse.set_visible(True)
         cursor = self.cursor_crosshair()
         pygame.mouse.set_cursor((24, 24), (12, 12), *cursor)
@@ -63,6 +63,8 @@ class Game(object):
                 self.gameOverScreen(gameArea, "TIME IS UP")
             if self.GAMESTATE == enums.GAMESTATE.STARTSCREEN:
                 self.startScreen(gameArea)
+            if self.GAMESTATE == enums.GAMESTATE.HELPSCREEN:
+                self.helpScreen(gameArea)
             self.screen.blit(gameArea, (0, 20))
             self.screen.blit(self.topBar, (0, 0))
             pygame.display.flip()
@@ -110,7 +112,7 @@ class Game(object):
         Click events call lander.clicked to check collision and trigger thrust on a single lander while clicked
         """
         for event in pygame.event.get():
-            if self.GAMESTATE != enums.GAMESTATE.STARTSCREEN:
+            if self.GAMESTATE not in (enums.GAMESTATE.STARTSCREEN, enums.GAMESTATE.HELPSCREEN):
                 if event.type == pygame.QUIT:
                     self.GAMESTATE = enums.GAMESTATE.QUIT
                 # KEYDOWN and KEYUP are handled separately to allow press and hold actions
@@ -157,7 +159,12 @@ class Game(object):
                         self.playerName = self.playerName[:-1]
                     elif event.key in range(97, 123):
                         self.playerName += chr(event.key)
-                self.playerName = self.playerName.title()
+                    elif event.key == K_TAB:
+                        self.setHelp(True)
+                if event.type == pygame.KEYUP:
+                    if event.key == K_TAB:
+                        self.setHelp(False)
+                self.playerName = self.playerName.upper()
 
 
     def spawnLander(self, forced=False):
@@ -266,6 +273,11 @@ class Game(object):
         textRect.centerx = self.drawSize[0]/2
         textRect.centery = self.drawSize[1]/2 + 50
         screen.blit(text, textRect)
+        text = font.render('Press R for new round', True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.centerx = self.drawSize[0]/2
+        textRect.centery = 25
+        screen.blit(text, textRect)
 
     def restart(self):
         self.landerList = list()
@@ -317,11 +329,73 @@ class Game(object):
         textRect.centerx = self.drawSize[0]/2
         textRect.centery = self.drawSize[1]/2 + 80
         screen.blit(text, textRect)
-        text = font.render("to start Game", True, (255, 255, 255, 0))
+        text = font.render("to start game", True, (255, 255, 255, 0))
         textRect = text.get_rect()
         textRect.centerx = self.drawSize[0]/2
         textRect.centery = self.drawSize[1]/2 + 96
         screen.blit(text, textRect)
+
+        text = font.render("Press and hold tab", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.centerx = self.drawSize[0]/2
+        textRect.centery = self.drawSize[1]/2 - 80
+        screen.blit(text, textRect)
+        text = font.render("for help", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.centerx = self.drawSize[0]/2
+        textRect.centery = self.drawSize[1]/2 - 62
+        screen.blit(text, textRect)
+
+    def helpScreen(self, screen):
+        """Draw help screen and ask for name
+        """
+        shade = pygame.Surface(screen.get_size())
+        shade.fill((0, 0, 0))
+        shade.set_alpha(200)
+        screen.blit(shade, (0, 0))
+        font = pygame.font.Font(None, 20)
+
+        screen.blit(self.assets.upArrow, (5, 20))
+        text = font.render("Accelerate drones upwards", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.x = 60
+        textRect.centery = 30
+        screen.blit(text, textRect)
+
+        screen.blit(self.assets.leftArrow, (5, 50))
+        screen.blit(self.assets.rightArrow, (30, 50))
+        text = font.render("Steer left/right", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.x = 60
+        textRect.centery = 60
+        screen.blit(text, textRect)
+
+        screen.blit(self.assets.space, (5, 80))
+        text = font.render("Spawn another drone", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.x = 60
+        textRect.centery = 90
+        screen.blit(text, textRect)
+
+        screen.blit(self.assets.ESC, (5, 110))
+        text = font.render("Quit game", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.x = 60
+        textRect.centery = 120
+        screen.blit(text, textRect)
+
+        screen.blit(self.assets.mouse, (5, 140))
+        text = font.render("Accelerate single drone", True, (255, 255, 255, 0))
+        textRect = text.get_rect()
+        textRect.x = 60
+        textRect.centery = 150
+        screen.blit(text, textRect)
+
+    def setHelp(self, activate):
+        if activate:
+            self.GAMESTATE = enums.GAMESTATE.HELPSCREEN
+        else:
+            self.GAMESTATE = enums.GAMESTATE.STARTSCREEN
 
 
 if __name__ == "__main__":
