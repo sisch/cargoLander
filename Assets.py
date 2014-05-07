@@ -13,3 +13,4 @@ class Assets(object):
         self.redBox = pygame.image.load("assets/red_box.png").convert()
         self.blueBox = pygame.image.load("assets/blue_box.png").convert()
         self.boxOverlay = pygame.image.load("assets/box_overlay.png").convert()
+        self.background = pygame.image.load("assets/background.png").convert()

@@ -39,7 +39,7 @@ class Game(object):
     def run(self):
         """Initialise and run game loop"""
         clock = pygame.time.Clock()
-        pygame.display.set_caption('Cargo Lander v0.5')
+        pygame.display.set_caption('Cargo Lander v1.0')
         pygame.mouse.set_visible(True)
         cursor = self.cursor_crosshair()
         pygame.mouse.set_cursor((24, 24), (12, 12), *cursor)
@@ -51,7 +51,7 @@ class Game(object):
             self.processInput()
             if self.GAMESTATE == enums.GAMESTATE.QUIT:
                 return
-            gameArea.fill((50, 50, 150))  # Background
+            gameArea.blit(self.assets.background, (0, 0))
             self.drawPlatforms(gameArea)
             self.updateTimeLeft(deltaTime)
             self.drawTopBar()
@@ -275,7 +275,7 @@ class Game(object):
         self.lives = 4
         self.crashed = 0
         self.secondsLeft = 90
-        self.GAMESTATE = enums.GAMESTATE.RUNNING
+        self.GAMESTATE = enums.GAMESTATE.STARTSCREEN
         self.initPlatforms()
 
     def drawTopBar(self):
@@ -296,6 +296,10 @@ class Game(object):
     def startScreen(self, screen):
         """Draw start screen and ask for name
         """
+        shade = pygame.Surface(screen.get_size())
+        shade.fill((0, 0, 0))
+        shade.set_alpha(200)
+        screen.blit(shade, (0, 0))
         font = pygame.font.Font(None, 20)
         text = font.render(self.playerName, True, (255, 255, 255, 0))
         textRect = text.get_rect()
