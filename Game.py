@@ -117,6 +117,8 @@ class Game(object):
                     self.GAMESTATE = enums.GAMESTATE.QUIT
                 # KEYDOWN and KEYUP are handled separately to allow press and hold actions
                 if event.type == pygame.KEYDOWN:
+                    if event.key == K_f:
+                        pygame.display.toggle_fullscreen()
                     if event.key == K_ESCAPE:
                         self.GAMESTATE = enums.GAMESTATE.QUIT
                     if event.key == K_r and (self.GAMESTATE == enums.GAMESTATE.GAMEOVER or self.GAMESTATE == enums.GAMESTATE.TIMEUP):
